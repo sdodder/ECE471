@@ -1,0 +1,42 @@
+//HW4.9.1DodderSpencer
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+
+void main(void) {
+
+	int timer;						// initialize timer variable
+      int hold;						// initialize holder for dip switch value
+    
+	DDRT = 0;						// initialize the dip switches for as input
+	DDRS = 0xFF;					// initialize the leds as output
+	hold = PTT;						// read value from dip switches
+
+// check the switch 7
+      PTS = 0x40;
+      
+      while( ( hold & 0x40 )!= 0x40){
+            hold = PTT;                         // wait for switch seven to go high     
+      }
+      
+      while( ( hold & 0x40 )== 0x40){
+            hold = PTT;                         // wait for switch seven to go low     
+      }
+	
+//blink loop
+      ARMCOP = 0x55;                      // reset watch dog
+	ARMCOP = 0xAA;
+      COPCTL = 0x07;                            // initialize the watchdop timer to 2^24
+      
+	while(1){
+	      			   		      // infinite loop for blinking leds
+		timer = 2000000000;
+		while ( timer ) {		   	      // run timer for on and off cycles
+			if(timer > timer / 2){ 	      // on cycle
+				PTS = 0xFF;		   
+			} else {			   	// off cycle
+				PTS = 0x00;
+			}
+			timer--;
+		}	
+	}
+}
