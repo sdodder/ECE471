@@ -1,0 +1,39 @@
+//HW4.9.2DodderSpencer
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+#include "RTI_ser"
+
+void main(void) {
+
+      int hold;						// initialize holder for dip switch value
+    
+	DDRT = 0;						// initialize the dip switches for as input
+	DDRS = 0xFF;					// initialize the leds as output
+	hold = PTT;						// read value from dip switches
+
+// check the switch 7
+      PTS = 0x40;
+      
+      while( ( hold & 0x40 )!= 0x40){
+            hold = PTT;                         // wait for switch seven to go high     
+      }
+      
+      while( ( hold & 0x40 )== 0x40){
+            hold = PTT;                         // wait for switch seven to go low     
+      }
+	
+//blink loop
+      // init watch-dog
+      ARMCOP = 0x55;                      // reset watch dog
+	ARMCOP = 0xAA;
+      COPCTL = 0x07;                            // initialize the watchdop timer to 2^24
+      
+      RTICTL = 0x40;
+      _asm("CLI\n");
+      
+	while(1){
+	      			   		      // infinite loop for blinking leds
+            PTS = 0x00;
+      	
+	}
+}
