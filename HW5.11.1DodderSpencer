@@ -1,5 +1,10 @@
 #include <hidef.h>      /* common defines and macros */
 #include "derivative.h"      /* derivative-specific definitions */
+void Delay( int time );
+void InitPotentiaometer( void );
+int ADpot;
+int ADtemp;
+int ADpres;		// potentiaometer data, temperature data, pressure data
 
 void Delay( int time ) {
       time = 10 * time;        // 2 ms to 20 loops at 100 uSec per loop
@@ -10,31 +15,39 @@ void Delay( int time ) {
                   	      LDAA  #$C8 	; Load Accumulator with "100 uSec delay value"
                   DELAY:      DECA 	; Decrement ACC
                   	      BNE DELAY 	; Branch if not equal to Zero
-            #endasm
+            #endasm;
             time--;
       }
 }
 
 void InitPotentiaometer( void ) {
-	ATDCTL2 = 0x80; //turn on A/D
-	ATDCTL4 = 0x80; //10 bit mode
-	Delay(2); //write a delay for 2 ms wait for power-up
+	ATDCTL2 = 0x82; //ATD controll power mode(and interrupt enable) (ATD register 2)
+					//bit 7 set for standard A/D convertion
+					//bit 1 set for interrupt enable
+					
+	ATDCTL4 = 0x80; //ATD controll clock selection (ATD register 4)
+					//bit 1 set for 8 bit resolution
+					 
+	Delay(2); 		//write a delay for 2 ms wait for power-up
+	
+	ATDCTL5 = 0b10110000; //ATD controll Analog input selection (ATD register 5)
+					//bit 7 set for right justify
+					//bit 5 ser for continuous scan
+					//bit 4 set for multi channel mode
+					
+	//ATDCTL3 = 0x1C; //ATD controll conversion controll (ATD register 3)
+					//bit 4,3 set for 3 channel conversion per sequence
+					//bit 2 ser for FIFO corresponding register loading
 }
 
-int Potentiometer( void ) {
-	int ADVal;
-	ATDCTL5 = 0x80; 	//start conversion channel 0
-				//Right justified
-	while(!(ATDSTAT0 & 0x80)) //wait conversion complete
-		;
-	ADVal = (int) ATDDR0; 	//get 16 bit data
-	return ADVal;
+interrupt void ATD_rut( void ) {
+	ADpot = (int) ATDDR0; 	//get 16 bit data
+	ADtemp = (int) ATDDR2; 	//get 16 bit data
+	ADpres = (int) ATDDR1; 	//get 16 bit data
 }
 
 void main( void ) {
-      DDRS = 0xFF;                          // initialize leds
-      int hold = 0;
-
-      InitPotentiaometer();                 //initialize potentiometer
-	while (1) {	hold = Potentiometer();}         //convert potentiometer to digitalvalue
+    InitPotentiaometer();                 //initialize potentiometer
+    _asm("CLI\n");						  // enable all interrupts
+	while (1) {	;} 						  //convert potentiometer to digitalvalue
 }
