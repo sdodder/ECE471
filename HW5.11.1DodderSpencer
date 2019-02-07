@@ -25,7 +25,7 @@ int Potentiometer( void ) {
 	int ADVal;
 	ATDCTL5 = 0x80; 	//start conversion channel 0
 				//Right justified
-	while(!(ATDSTAT0 & 0x8000)) //wait conversion complete
+	while(!(ATDSTAT0 & 0x80)) //wait conversion complete
 		;
 	ADVal = (int) ATDDR0; 	//get 16 bit data
 	return ADVal;
