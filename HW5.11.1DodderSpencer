@@ -1,1 +1,40 @@
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
 
+void Delay( int time ) {
+      time = 10 * time;        // 2 ms to 20 loops at 100 uSec per loop
+      while( time > 0 ){
+            
+            #asm
+                  ;* Subroutine DELAY  - Delay Required for ATD converter to Stabilize (100 uSec)
+                  	      LDAA  #$C8 	; Load Accumulator with "100 uSec delay value"
+                  DELAY:      DECA 	; Decrement ACC
+                  	      BNE DELAY 	; Branch if not equal to Zero
+            #endasm
+            time--;
+      }
+}
+
+void InitPotentiaometer( void ) {
+	ATDCTL2 = 0x80; //turn on A/D
+	ATDCTL4 = 0x80; //10 bit mode
+	Delay(2); //write a delay for 2 ms wait for power-up
+}
+
+int Potentiometer( void ) {
+	int ADVal;
+	ATDCTL5 = 0x80; 	//start conversion channel 0
+				//Right justified
+	while(!(ATDSTAT0 & 0x8000)) //wait conversion complete
+		;
+	ADVal = (int) ATDDR0; 	//get 16 bit data
+	return ADVal;
+}
+
+void main( void ) {
+      DDRS = 0xFF;                          // initialize leds
+      int hold = 0;
+
+      InitPotentiaometer();                 //initialize potentiometer
+	while (1) {	hold = Potentiometer();}         //convert potentiometer to digitalvalue
+}
