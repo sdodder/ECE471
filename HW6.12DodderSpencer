@@ -48,7 +48,7 @@ interrupt void T0Ch4( void )
 	TIM0_TFLG1 = 0x10;			//see flag and clear
 }
 
-interrupt void T1Ch7( void ) {
+/*interrupt void T1Ch7( void ) {
 	PTS = ~PTS;
 	TIM1_TFLG1 = 0x80;			//see flag and clear
-}
+}*/
