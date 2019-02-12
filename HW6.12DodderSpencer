@@ -1,0 +1,54 @@
+//HW6.12DodderSpencer
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+void InitTimer( void );		//function prototype
+//interrupt void T0Ch4( void );
+int flag = 0;
+
+void main(void) {
+
+	//int timer;						// initialize timer variable
+    
+    InitTimer();
+	DDRS = 0xFF;					// initialize the leds as output
+	
+	EnableInterrupts;
+	while(1){}
+}
+
+void InitTimer( void )
+{
+	TIM0_TIOS = 0b10000000;		//clear bit 6:4 sets all as input capture
+								//set bit 7 sets 7 as output compare 
+								
+	TIM0_TSCR2 = 0b00000111;	//bit 7 (TOI) timer interrupt allowed div time 128
+	
+	TIM0_TCTL3 = 0b00000011; 	// '01' sets coresponding channel for capture on rising edge
+								// bits 1:0 sets channel channel 4 as rising edge capture
+								
+	TIM0_TSCR1 = 0b10000000;	//bit 7 set for normal functionality
+	
+	TIM0_TIE = 0b00010000;		//bit 4 enables interrupt
+	
+	TIM1_TIOS = 0b10000000;		//clear bit 6:4 sets all as input capture
+								//set bit 7 sets 7 as output compare 
+								
+	TIM1_TSCR2 = 0b00001111;	//bit 7 (TOI) timer interrupt allowed div time 128
+	
+	TIM1_TCTL1 = 0b01000000;	//bits 7:6 set output compare to toggle output signal
+								
+	TIM1_TSCR1 = 0b10000000;	//bit 7 set for normal functionality
+	
+	TIM1_TIE = 0b10000000;		//bit 4 enables interrupt
+}
+
+interrupt void T0Ch4( void )
+{
+	TIM1_TC7 = TIM0_TC4;		// saves intput capture time from channel 4 to output compare of channel 7
+	TIM0_TFLG1 = 0x10;			//see flag and clear
+}
+
+interrupt void T1Ch7( void ) {
+	PTS = ~PTS;
+	TIM1_TFLG1 = 0x80;			//see flag and clear
+}
