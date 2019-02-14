@@ -1,0 +1,21 @@
+#include <hidef.h>      /* common defines and macros */
+#include "derivative.h"      /* derivative-specific definitions */
+void InitSci( void );
+
+
+void main(void) {
+      
+      InitSci();
+      
+      while(1){
+            if (SCI0SR1 & 0b01000000 == 0b01000000 ){
+                  SCI0DRH = 0x00;
+                  SCI0DRL = 0xe3;   //write to the terminal
+            }
+      }
+}
+
+void InitSci( void ){
+      SCI0BDL = 0x26;         //baud rate 9600 SC0BD = 4MHz/(16*9600)
+      SCI0CR2 = 0x0C;         // transmite enabled                             
+}
