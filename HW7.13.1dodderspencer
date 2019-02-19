@@ -1,21 +1,58 @@
 #include <hidef.h>      /* common defines and macros */
 #include "derivative.h"      /* derivative-specific definitions */
 void InitSci( void );
-
+//data register when received is SCIDRL for SCI0 := SCI0DRL
 
 void main(void) {
       
       InitSci();
+      EnableInterrupts;
+      while(1);/*
+      //compute fib sequence
+      int fib[100];
+      for(int i = 0; i < 100; i++){
       
-      while(1){
-            if (SCI0SR1 & 0b01000000 == 0b01000000 ){
-                  SCI0DRH = 0x00;
-                  SCI0DRL = 0xe3;   //write to the terminal
+            if(i == 0){
+                  fib(i) = 0;
+            }else if(i == 1){
+                  fib(i) = 1;
+            }else if(i == 99){
+                  fib(i) = fib(i-1) + fib(i-2);
+                  i = -1;
+            }else{
+                  fib(i) = fib(i-1) + fib(i-2);
             }
-      }
+      }*/
 }
 
 void InitSci( void ){
       SCI0BDL = 0x26;         //baud rate 9600 SC0BD = 4MHz/(16*9600)
-      SCI0CR2 = 0x0C;         // transmite enabled                             
+      SCI0CR1 = 0x00;
+      SCI0CR2 = 0b01101100;   //bit 7, 6, 5 are transmition and receive interrupt enabled
+                              //bit 3, 2 are transmition and receive enabled                         
+}
+
+/*interrupt and check for: (for SCI0 the SCISR1 := SCI0SR1)
+                           (SCISR1 contains flags)
+                may not matter transmition complete (SCISR1 bit 7 flag)
+                transmition register empty (SCISR1 bit 6 flag)
+                receive complete (SCISR1 bit 5 flag)
+*/
+interrupt void SCI0_rut(void){
+      static char info;
+      static char flag = 1;
+      if( (SCI0SR1 & 0b01000000) == 0b01000000 ){
+            if( flag == 0){     
+                  //transmition complete and register empty
+                  SCI0DRL = info;
+                  SCI0SR1;
+                  flag = 1;
+            }
+      }
+      if( (SCI0SR1 & 0b00100000) == 0b00100000 ){
+            //receive complete
+            info = SCI0DRL;
+            SCI0SR1;
+            flag = 0;
+      }
 }
